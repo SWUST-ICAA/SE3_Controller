@@ -1,8 +1,5 @@
 # Geometric Controller Configuration
 
-# Controller Settings
-mav_name: "quadrotor"
-
 # Controller Mode Selection
 # 1: ERROR_QUATERNION - Nonlinear attitude control using quaternion error
 # 2: ERROR_GEOMETRIC - Nonlinear geometric control using SO(3) error  
