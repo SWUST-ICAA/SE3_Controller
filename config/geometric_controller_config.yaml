@@ -1,44 +1,64 @@
-
 # Geometric Controller Configuration
 
 # Controller Settings
 mav_name: "quadrotor"
-ctrl_mode: 2  # 1: ERROR_QUATERNION, 2: ERROR_GEOMETRIC
+
+# Controller Mode Selection
+# 1: ERROR_QUATERNION - Nonlinear attitude control using quaternion error
+# 2: ERROR_GEOMETRIC - Nonlinear geometric control using SO(3) error  
+# 3: JERK_TRACKING - Jerk feedforward tracking control
+controller_type: 2
+
+# Automatic takeoff and landing
 auto_takeoff: true
+
+# Velocity-based yaw control
+# If true: yaw is determined by velocity direction
+# If false: yaw is controlled by yaw_heading parameter
 velocity_yaw: false
 
 # Position Controller Gains
-Kp_x: 10.0
-Kp_y: 10.0
-Kp_z: 20.0
+# These gains affect position tracking performance
+Kp_x: 10.0  # X-axis position gain
+Kp_y: 10.0  # Y-axis position gain  
+Kp_z: 20.0  # Z-axis position gain (typically higher for altitude control)
 
 # Velocity Controller Gains
-Kv_x: 5.0
-Kv_y: 5.0
-Kv_z: 10.0
+# These gains affect velocity tracking performance
+Kv_x: 5.0   # X-axis velocity gain
+Kv_y: 5.0   # Y-axis velocity gain
+Kv_z: 10.0  # Z-axis velocity gain
 
 # Drag Compensation
-drag_dx: 0.0
-drag_dy: 0.0
-drag_dz: 0.0
+# Compensates for aerodynamic drag effects
+drag_dx: 0.0  # X-axis drag coefficient
+drag_dy: 0.0  # Y-axis drag coefficient
+drag_dz: 0.0  # Z-axis drag coefficient
 
 # Attitude Controller
+# Time constant for attitude control convergence (seconds)
+# Smaller values = faster response, larger values = smoother response
 attctrl_constant: 0.3
 
-# Thrust Mapping
-normalizedthrust_constant: 0.06
-normalizedthrust_offset: 0.1
+# Thrust Mapping Parameters
+# Maps desired acceleration to normalized thrust command
+normalizedthrust_constant: 0.06  # Thrust scaling factor
+normalizedthrust_offset: 0.1      # Thrust offset for hover
 
-# Constraints
+# Acceleration Constraints
+# Maximum feedback acceleration (m/s^2)
 max_acc: 10.0
 
 # Initial Position
-init_pos_x: 0.0
-init_pos_y: 0.0
-init_pos_z: 1.0
+# Starting position when controller is activated
+init_pos_x: 0.0  # Initial X position (m)
+init_pos_y: 0.0  # Initial Y position (m)
+init_pos_z: 1.0  # Initial Z position (m)
 
 # Yaw Control
+# Desired yaw angle when velocity_yaw is false (radians)
 yaw_heading: 0.0
 
-# Visualization
+# Visualization Settings
+# Number of poses to keep in trajectory history
 posehistory_window: 200

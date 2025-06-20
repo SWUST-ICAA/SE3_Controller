@@ -3,6 +3,9 @@
   <arg name="config_file" default="$(find geometric_controller)/config/geometric_controller_config.yaml"/>
   <arg name="node_name" default="geometric_controller"/>
   <arg name="output" default="screen"/>
+  <arg name="enable_rviz" default="false"/>
+  <arg name="rviz_config" default="$(find geometric_controller)/rviz/config_file.rviz"/>
+  <arg name="multi_vehicle" default="false"/>
 
   <!-- Geometric Controller Node -->
   <node pkg="geometric_controller" 
@@ -16,5 +19,24 @@
 
   <!-- Launch rqt_reconfigure for dynamic parameter adjustment -->
   <node pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen" name="rqt_reconfigure" />
+
+  <!-- Launch RViz if enabled -->
+  <group if="$(arg enable_rviz)">
+    <!-- Single vehicle visualization -->
+    <node unless="$(arg multi_vehicle)" 
+          pkg="rviz" 
+          type="rviz" 
+          name="rviz" 
+          args="-d $(arg rviz_config)"
+          output="screen"/>
+    
+    <!-- Multi-vehicle visualization -->
+    <node if="$(arg multi_vehicle)" 
+          pkg="rviz" 
+          type="rviz" 
+          name="rviz" 
+          args="-d $(find geometric_controller)/rviz/multi_vehicle_config_file.rviz"
+          output="screen"/>
+  </group>
 
 </launch>

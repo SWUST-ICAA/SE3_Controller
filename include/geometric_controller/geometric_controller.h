@@ -75,6 +75,7 @@
 
 #define ERROR_QUATERNION 1
 #define ERROR_GEOMETRIC 2
+#define JERK_TRACKING 3
 
 using namespace std;
 using namespace Eigen;
@@ -99,10 +100,10 @@ class geometricCtrl {
   ros::Subscriber flatreferenceSub_;
   ros::Subscriber multiDOFJointSub_;
   ros::Subscriber mavstateSub_;
-  ros::Subscriber mavposeSub_, gzmavposeSub_;
+  ros::Subscriber mavposeSub_;
   ros::Subscriber mavtwistSub_;
   ros::Subscriber yawreferenceSub_;
-  ros::Publisher rotorVelPub_, angularVelPub_, target_pose_pub_;
+  ros::Publisher angularVelPub_, target_pose_pub_;
   ros::Publisher referencePosePub_;
   ros::Publisher posehistoryPub_;
   ros::Publisher systemstatusPub_;
@@ -113,15 +114,10 @@ class geometricCtrl {
   ros::Timer cmdloop_timer_, statusloop_timer_;
   ros::Time last_request_, reference_request_now_, reference_request_last_;
 
-  string mav_name_;
-  bool fail_detec_{false};
   bool feedthrough_enable_{false};
-  bool ctrl_enable_{true};
   int ctrl_mode_;
-  bool landing_commanded_{false};
   bool auto_takeoff;
   bool velocity_yaw_;
-  double kp_rot_, kd_rot_;
   double reference_request_dt_;
   double norm_thrust_const_, norm_thrust_offset_;
   double max_fb_acc_;
@@ -132,7 +128,7 @@ class geometricCtrl {
   MAV_STATE companion_state_ = MAV_STATE::MAV_STATE_ACTIVE;
 
   double initTargetPos_x_, initTargetPos_y_, initTargetPos_z_;
-  Eigen::Vector3d targetPos_, targetVel_, targetAcc_, targetJerk_, targetSnap_, targetPos_prev_, targetVel_prev_;
+  Eigen::Vector3d targetPos_, targetVel_, targetAcc_, targetPos_prev_, targetVel_prev_;
   Eigen::Vector3d mavPos_, mavVel_, mavRate_;
   double mavYaw_;
   Eigen::Vector3d gravity_{Eigen::Vector3d(0.0, 0.0, -9.8)};
@@ -142,18 +138,15 @@ class geometricCtrl {
   double Kpos_x_, Kpos_y_, Kpos_z_, Kvel_x_, Kvel_y_, Kvel_z_;
   int posehistory_window_;
 
-  void pubMotorCommands();
   void pubRateCommands(const Eigen::Vector4d &cmd, const Eigen::Vector4d &target_attitude);
   void pubReferencePose(const Eigen::Vector3d &target_position, const Eigen::Vector4d &target_attitude);
   void pubPoseHistory();
   void pubSystemStatus();
   void appendPoseHistory();
-  void odomCallback(const nav_msgs::OdometryConstPtr &odomMsg);
   void targetCallback(const geometry_msgs::TwistStamped &msg);
   void flattargetCallback(const geometric_controller::FlatTarget &msg);
   void yawtargetCallback(const std_msgs::Float32 &msg);
   void multiDOFJointCallback(const trajectory_msgs::MultiDOFJointTrajectory &msg);
-  void keyboardCallback(const geometry_msgs::Twist &msg);
   void cmdloopCallback(const ros::TimerEvent &event);
   void mavstateCallback(const mavros_msgs::State::ConstPtr &msg);
   void mavposeCallback(const geometry_msgs::PoseStamped &msg);
@@ -166,8 +159,6 @@ class geometricCtrl {
   Eigen::Vector3d controlPosition(const Eigen::Vector3d &target_pos, const Eigen::Vector3d &target_vel,
                                   const Eigen::Vector3d &target_acc);
   Eigen::Vector3d poscontroller(const Eigen::Vector3d &pos_error, const Eigen::Vector3d &vel_error);
-  Eigen::Vector4d attcontroller(const Eigen::Vector4d &ref_att, const Eigen::Vector3d &ref_acc,
-                                Eigen::Vector4d &curr_att);
 
   enum FlightState { WAITING_FOR_HOME_POSE, MISSION_EXECUTION, LANDING, LANDED } node_state;
 

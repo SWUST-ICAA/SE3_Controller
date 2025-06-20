@@ -47,7 +47,7 @@ using namespace Eigen;
 using namespace std;
 // Constructor
 geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
-    : nh_(nh), nh_private_(nh_private), node_state(WAITING_FOR_HOME_POSE) {
+    : nh_(nh), nh_private_(nh_private), node_state(WAITING_FOR_HOME_POSE){
   referenceSub_ =
       nh_.subscribe("reference/setpoint", 1, &geometricCtrl::targetCallback, this, ros::TransportHints().tcpNoDelay());
   flatreferenceSub_ = nh_.subscribe("reference/flatsetpoint", 1, &geometricCtrl::flattargetCallback, this,
@@ -76,9 +76,14 @@ geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &n
   arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
   set_mode_client_ = nh_.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
   land_service_ = nh_.advertiseService("land", &geometricCtrl::landCallback, this);
-
-  nh_private_.param<string>("mavname", mav_name_, "iris");
+  
+  // Controller type selection
+  int controller_type;
+  nh_private_.param<int>("controller_type", controller_type, 2);
+  
+  // Legacy parameter for backward compatibility
   nh_private_.param<int>("ctrl_mode", ctrl_mode_, ERROR_QUATERNION);
+  
   nh_private_.param<bool>("auto_takeoff", auto_takeoff, true);
   nh_private_.param<bool>("velocity_yaw", velocity_yaw_, false);
   nh_private_.param<double>("max_acc", max_fb_acc_, 9.0);
@@ -92,8 +97,8 @@ geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &n
 
   double attctrl_tau;
   nh_private_.param<double>("attctrl_constant", attctrl_tau, 0.1);
-  nh_private_.param<double>("normalizedthrust_constant", norm_thrust_const_, 0.05);  // 1 / max acceleration
-  nh_private_.param<double>("normalizedthrust_offset", norm_thrust_offset_, 0.1);    // 1 / max acceleration
+  nh_private_.param<double>("normalizedthrust_constant", norm_thrust_const_, 0.05);
+  nh_private_.param<double>("normalizedthrust_offset", norm_thrust_offset_, 0.1);
   nh_private_.param<double>("Kp_x", Kpos_x_, 8.0);
   nh_private_.param<double>("Kp_y", Kpos_y_, 8.0);
   nh_private_.param<double>("Kp_z", Kpos_z_, 10.0);
@@ -105,23 +110,34 @@ geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &n
   nh_private_.param<double>("init_pos_y", initTargetPos_y_, 0.0);
   nh_private_.param<double>("init_pos_z", initTargetPos_z_, 2.0);
 
-  targetPos_ << initTargetPos_x_, initTargetPos_y_, initTargetPos_z_;  // Initial Position
+  targetPos_ << initTargetPos_x_, initTargetPos_y_, initTargetPos_z_;
   targetVel_ << 0.0, 0.0, 0.0;
   mavPos_ << 0.0, 0.0, 0.0;
   mavVel_ << 0.0, 0.0, 0.0;
   Kpos_ << -Kpos_x_, -Kpos_y_, -Kpos_z_;
   Kvel_ << -Kvel_x_, -Kvel_y_, -Kvel_z_;
 
-  bool jerk_enabled = false;
-  if (!jerk_enabled) {
-    if (ctrl_mode_ == ERROR_GEOMETRIC) {
-      controller_ = std::make_shared<NonlinearGeometricControl>(attctrl_tau);
-    } else {
+  // Initialize controller based on controller_type parameter
+  switch (controller_type) {
+    case 1:  // ERROR_QUATERNION
       controller_ = std::make_shared<NonlinearAttitudeControl>(attctrl_tau);
+      ctrl_mode_ = ERROR_QUATERNION;
+      ROS_INFO("Initialized Nonlinear Attitude Controller (Quaternion Error)");
+      break;
+    case 2:  // ERROR_GEOMETRIC
+      controller_ = std::make_shared<NonlinearGeometricControl>(attctrl_tau);
+      ctrl_mode_ = ERROR_GEOMETRIC;
+      ROS_INFO("Initialized Nonlinear Geometric Controller (SO(3) Error)");
+      break;
+    case 3:  // JERK_TRACKING
+      controller_ = std::make_shared<JerkTrackingControl>();
+      ROS_INFO("Initialized Jerk Tracking Controller");
+      break;
+    default:
+      ROS_WARN("Invalid controller_type: %d. Using default Geometric Controller", controller_type);
+      controller_ = std::make_shared<NonlinearGeometricControl>(attctrl_tau);
+      ctrl_mode_ = ERROR_GEOMETRIC;
     }
-  } else {
-    controller_ = std::make_shared<JerkTrackingControl>();
-  }
 }
 geometricCtrl::~geometricCtrl() {
   // Destructor
@@ -156,25 +172,12 @@ void geometricCtrl::flattargetCallback(const geometric_controller::FlatTarget &m
   targetPos_ = toEigen(msg.position);
   targetVel_ = toEigen(msg.velocity);
 
-  if (msg.type_mask == 1) {
+  if (msg.type_mask == 1 || msg.type_mask == 2) {
     targetAcc_ = toEigen(msg.acceleration);
-    targetJerk_ = toEigen(msg.jerk);
-    targetSnap_ = Eigen::Vector3d::Zero();
-
-  } else if (msg.type_mask == 2) {
-    targetAcc_ = toEigen(msg.acceleration);
-    targetJerk_ = Eigen::Vector3d::Zero();
-    targetSnap_ = Eigen::Vector3d::Zero();
-
   } else if (msg.type_mask == 4) {
     targetAcc_ = Eigen::Vector3d::Zero();
-    targetJerk_ = Eigen::Vector3d::Zero();
-    targetSnap_ = Eigen::Vector3d::Zero();
-
   } else {
     targetAcc_ = toEigen(msg.acceleration);
-    targetJerk_ = toEigen(msg.jerk);
-    targetSnap_ = toEigen(msg.snap);
   }
 }
 
@@ -196,8 +199,6 @@ void geometricCtrl::multiDOFJointCallback(const trajectory_msgs::MultiDOFJointTr
   targetVel_ << pt.velocities[0].linear.x, pt.velocities[0].linear.y, pt.velocities[0].linear.z;
 
   targetAcc_ << pt.accelerations[0].linear.x, pt.accelerations[0].linear.y, pt.accelerations[0].linear.z;
-  targetJerk_ = Eigen::Vector3d::Zero();
-  targetSnap_ = Eigen::Vector3d::Zero();
 
   if (!velocity_yaw_) {
     Eigen::Quaterniond q(pt.transforms[0].rotation.w, pt.transforms[0].rotation.x, pt.transforms[0].rotation.y,
@@ -402,7 +403,7 @@ void geometricCtrl::computeBodyRateCmd(Eigen::Vector4d &bodyrate_cmd, const Eige
   // Reference attitude
   q_des = acc2quaternion(a_des, mavYaw_);
 
-  controller_->Update(mavAtt_, q_des, a_des, targetJerk_);  // Calculate BodyRate
+  controller_->Update(mavAtt_, q_des, a_des, Eigen::Vector3d::Zero());  // Calculate BodyRate
   bodyrate_cmd.head(3) = controller_->getDesiredRate();
   double thrust_command = controller_->getDesiredThrust().z();
   bodyrate_cmd(3) =
