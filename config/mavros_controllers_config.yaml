@@ -29,10 +29,10 @@ Kv_z: 12  # Z-axis velocity gain
 # Integral Controller Gains (optional)
 # Set enable_integral to true to activate integral action
 enable_integral: true
-Kint_x: 1.5  # X-axis integral gain
-Kint_y: 1.5  # Y-axis integral gain  
-Kint_z: 1.5  # Z-axis integral gain
-max_integral: 2  # Anti-windup limit for integral term
+Kint_x: 3  # X-axis integral gain
+Kint_y: 3  # Y-axis integral gain  
+Kint_z: 3  # Z-axis integral gain
+max_integral: 3  # Anti-windup limit for integral term
 
 # Drag Compensation
 # Compensates for aerodynamic drag effects

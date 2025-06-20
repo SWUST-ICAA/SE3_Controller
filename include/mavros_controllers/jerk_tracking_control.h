@@ -32,8 +32,11 @@
  ****************************************************************************/
 
 /**
- * @brief Controller base class
+ * @brief Jerk tracking controller implementation
  *
+ * This class implements a controller that tracks desired jerk trajectories
+ * for quadrotor control. It inherits from the Control base class and
+ * provides specific implementation for jerk-based tracking control.
  *
  * @author Nanwan <nanwan2004@126.com>
  */
@@ -46,13 +49,35 @@
 
 class JerkTrackingControl : public Control {
  public:
+  /**
+   * @brief Constructor
+   */
   JerkTrackingControl();
+
+  /**
+   * @brief Destructor
+   */
   virtual ~JerkTrackingControl();
-  void Update(Eigen::Vector4d &curr_att, const Eigen::Vector4d &ref_att, const Eigen::Vector3d &ref_acc,
+
+  /**
+   * @brief Updates the jerk tracking controller state
+   * 
+   * Implements a jerk tracking control algorithm that considers
+   * the rate of change of acceleration for more precise trajectory
+   * tracking.
+   *
+   * @param curr_att Current attitude quaternion [w,x,y,z]
+   * @param ref_att Reference attitude quaternion [w,x,y,z]
+   * @param ref_acc Reference acceleration vector [m/s^2]
+   * @param ref_jerk Reference jerk vector [m/s^3]
+   */
+  void Update(Eigen::Vector4d &curr_att,
+              const Eigen::Vector4d &ref_att,
+              const Eigen::Vector3d &ref_acc,
               const Eigen::Vector3d &ref_jerk) override;
 
  private:
-  Eigen::Vector3d last_ref_acc_{Eigen::Vector3d::Zero()};
+  Eigen::Vector3d last_ref_acc_{Eigen::Vector3d::Zero()};  ///< Last reference acceleration for jerk computation
 };
 
 #endif

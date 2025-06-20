@@ -32,8 +32,11 @@
  ****************************************************************************/
 
 /**
- * @brief Controller base class
+ * @brief Abstract base class for all controller implementations
  *
+ * This class defines the interface for different control strategies.
+ * It provides virtual methods for updating controller states and 
+ * accessing control outputs (desired thrust and angular rates).
  *
  * @author Nanwan <nanwan2004@126.com>
  */
@@ -45,16 +48,45 @@
 
 class Control {
  public:
-  Control(){};
-  virtual ~Control(){};
-  virtual void Update(Eigen::Vector4d &curr_att, const Eigen::Vector4d &ref_att, const Eigen::Vector3d &ref_acc,
-                      const Eigen::Vector3d &ref_jerk){};
-  Eigen::Vector3d getDesiredThrust() { return desired_thrust_; };
-  Eigen::Vector3d getDesiredRate() { return desired_rate_; };
-  Eigen::Vector3d desired_rate_{Eigen::Vector3d::Zero()};
-  Eigen::Vector3d desired_thrust_{Eigen::Vector3d::Zero()};
+  /**
+   * @brief Default constructor
+   */
+  Control() = default;
+
+  /**
+   * @brief Virtual destructor
+   */
+  virtual ~Control() = default;
+
+  /**
+   * @brief Updates the controller state
+   * 
+   * @param curr_att Current attitude quaternion [w,x,y,z]
+   * @param ref_att Reference attitude quaternion [w,x,y,z]
+   * @param ref_acc Reference acceleration vector [m/s^2]
+   * @param ref_jerk Reference jerk vector [m/s^3]
+   */
+  virtual void Update(Eigen::Vector4d &curr_att, 
+                     const Eigen::Vector4d &ref_att, 
+                     const Eigen::Vector3d &ref_acc,
+                     const Eigen::Vector3d &ref_jerk) = 0;
+
+  /**
+   * @brief Gets the desired thrust vector
+   * @return Vector3d Desired thrust in body frame [N]
+   */
+  Eigen::Vector3d getDesiredThrust() { return desired_thrust_; }
+
+  /**
+   * @brief Gets the desired angular rates
+   * @return Vector3d Desired angular rates [rad/s]
+   */
+  Eigen::Vector3d getDesiredRate() { return desired_rate_; }
 
  protected:
+  Eigen::Vector3d desired_rate_{Eigen::Vector3d::Zero()};    ///< Desired angular rates
+  Eigen::Vector3d desired_thrust_{Eigen::Vector3d::Zero()};  ///< Desired thrust vector
+
  private:
 };
 

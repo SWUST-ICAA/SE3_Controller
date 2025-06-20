@@ -32,8 +32,11 @@
  ****************************************************************************/
 
 /**
- * @brief Controller base class
+ * @brief Nonlinear attitude controller implementation
  *
+ * This class implements a nonlinear control approach specifically for
+ * quadrotor attitude control. It inherits from the Control base class
+ * and provides implementation for direct attitude tracking control.
  *
  * @author Nanwan <nanwan2004@126.com>
  */
@@ -46,13 +49,36 @@
 
 class NonlinearAttitudeControl : public Control {
  public:
-  NonlinearAttitudeControl(double attctrl_tau);
+  /**
+   * @brief Constructor
+   * @param attctrl_tau Attitude control time constant [s]
+   */
+  explicit NonlinearAttitudeControl(double attctrl_tau);
+
+  /**
+   * @brief Destructor
+   */
   virtual ~NonlinearAttitudeControl();
-  void Update(Eigen::Vector4d &curr_att, const Eigen::Vector4d &ref_att, const Eigen::Vector3d &ref_acc,
+
+  /**
+   * @brief Updates the attitude controller state
+   * 
+   * Implements a nonlinear control law for direct attitude tracking,
+   * using quaternion-based attitude representation for improved stability
+   * and performance.
+   *
+   * @param curr_att Current attitude quaternion [w,x,y,z]
+   * @param ref_att Reference attitude quaternion [w,x,y,z]
+   * @param ref_acc Reference acceleration vector [m/s^2]
+   * @param ref_jerk Reference jerk vector [m/s^3]
+   */
+  void Update(Eigen::Vector4d &curr_att,
+              const Eigen::Vector4d &ref_att,
+              const Eigen::Vector3d &ref_acc,
               const Eigen::Vector3d &ref_jerk) override;
 
  private:
-  double attctrl_tau_{1.0};
+  double attctrl_tau_{1.0};  ///< Attitude control time constant [s]
 };
 
 #endif

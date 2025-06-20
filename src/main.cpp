@@ -31,9 +31,19 @@
  *
  ****************************************************************************/
 /**
- * @brief Geometric Controller Node
+ * @brief MAVROS Controller Node
  *
- * Geometric controller ROS Node Implementation
+ * This ROS node implements a comprehensive UAV control system that includes:
+ * - Multiple control strategies (Geometric, Attitude, Jerk Tracking)
+ * - Dynamic parameter reconfiguration
+ * - Position and attitude control
+ * - Trajectory tracking
+ * 
+ * The node performs these key steps:
+ * 1. Initializes ROS communication
+ * 2. Creates controller instance with public and private parameter spaces
+ * 3. Sets up dynamic reconfiguration server
+ * 4. Runs the main ROS event loop
  *
  * @author Nanwan <nanwan2004@126.com>
  */
@@ -41,17 +51,26 @@
 #include "mavros_controllers/controller_manager.h"
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "mavros_controller");
-  ros::NodeHandle nh("");
-  ros::NodeHandle nh_private("~");
+    // Initialize ROS node
+    ros::init(argc, argv, "mavros_controller");
 
-  MavrosControllers* Controller = new MavrosControllers(nh, nh_private);
+    // Create node handles for public and private namespaces
+    ros::NodeHandle nh("");          // Public namespace
+    ros::NodeHandle nh_private("~"); // Private namespace
 
-  dynamic_reconfigure::Server<mavros_controllers::GeometricControllerConfig> srv;
-  dynamic_reconfigure::Server<mavros_controllers::GeometricControllerConfig>::CallbackType f;
-  f = boost::bind(&MavrosControllers::dynamicReconfigureCallback, Controller, _1, _2);
-  srv.setCallback(f);
+    // Initialize controller with both namespaces
+    // This sets up all subscribers, publishers and services
+    MavrosControllers* Controller = new MavrosControllers(nh, nh_private);
 
-  ros::spin();
-  return 0;
+    // Set up dynamic reconfigure server
+    // This allows runtime parameter updates
+    dynamic_reconfigure::Server<mavros_controllers::GeometricControllerConfig> srv;
+    dynamic_reconfigure::Server<mavros_controllers::GeometricControllerConfig>::CallbackType f;
+    f = boost::bind(&MavrosControllers::dynamicReconfigureCallback, Controller, _1, _2);
+    srv.setCallback(f);
+
+    // Enter ROS event loop
+    ros::spin();
+    
+    return 0;
 }
