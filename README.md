@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Version](https://img.shields.io/badge/version-v1.2.0-green.svg)](https://github.com/your-repo/mavros_controllers)
 
-SE(3) geometric controller for UAVs using differential flatness-based trajectory tracking.
+controllers for UAVs using differential flatness-based trajectory tracking.
 
 ## Features
 
