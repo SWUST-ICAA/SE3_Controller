@@ -4,7 +4,7 @@
 # Controller Settings
 mav_name: "quadrotor"
 ctrl_mode: 2  # 1: ERROR_QUATERNION, 2: ERROR_GEOMETRIC
-enable_sim: false
+auto_takeoff: true
 velocity_yaw: false
 
 # Position Controller Gains
@@ -35,7 +35,7 @@ max_acc: 10.0
 # Initial Position
 init_pos_x: 0.0
 init_pos_y: 0.0
-init_pos_z: 2.0
+init_pos_z: 1.0
 
 # Yaw Control
 yaw_heading: 0.0

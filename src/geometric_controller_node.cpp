@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2018-2021 Jaeyoung Lim. All rights reserved.
+ *   Copyright (c) 2025 Nanwan. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,7 +35,7 @@
  *
  * Geometric controller ROS Node Implementation
  *
- * @author Jaeyoung Lim <jalim@ethz.ch>
+ * @author Nanwan <nanwan2004@126.com>
  */
 
 #include "geometric_controller/geometric_controller.h"

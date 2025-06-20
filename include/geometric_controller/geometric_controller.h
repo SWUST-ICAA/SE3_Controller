@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2018-2022 Jaeyoung Lim. All rights reserved.
+ *   Copyright (c) 2025 Nanwan. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,7 +35,7 @@
  *
  * Geometric controller
  *
- * @author Jaeyoung Lim <jalim@ethz.ch>
+ * @author Nanwan <nanwan2004@126.com>
  */
 
 #ifndef GEOMETRIC_CONTROLLER_H
@@ -119,7 +119,7 @@ class geometricCtrl {
   bool ctrl_enable_{true};
   int ctrl_mode_;
   bool landing_commanded_{false};
-  bool sim_enable_;
+  bool auto_takeoff;
   bool velocity_yaw_;
   double kp_rot_, kd_rot_;
   double reference_request_dt_;
