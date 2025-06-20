@@ -1,0 +1,44 @@
+
+# Geometric Controller Configuration
+
+# Controller Settings
+mav_name: "quadrotor"
+ctrl_mode: 2  # 1: ERROR_QUATERNION, 2: ERROR_GEOMETRIC
+enable_sim: false
+velocity_yaw: false
+
+# Position Controller Gains
+Kp_x: 10.0
+Kp_y: 10.0
+Kp_z: 20.0
+
+# Velocity Controller Gains
+Kv_x: 5.0
+Kv_y: 5.0
+Kv_z: 10.0
+
+# Drag Compensation
+drag_dx: 0.0
+drag_dy: 0.0
+drag_dz: 0.0
+
+# Attitude Controller
+attctrl_constant: 0.3
+
+# Thrust Mapping
+normalizedthrust_constant: 0.06
+normalizedthrust_offset: 0.1
+
+# Constraints
+max_acc: 10.0
+
+# Initial Position
+init_pos_x: 0.0
+init_pos_y: 0.0
+init_pos_z: 2.0
+
+# Yaw Control
+yaw_heading: 0.0
+
+# Visualization
+posehistory_window: 200

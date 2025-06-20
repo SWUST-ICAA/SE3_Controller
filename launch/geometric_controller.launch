@@ -1,0 +1,49 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="config_file" default="$(find geometric_controller)/config/geometric_controller_config.yaml"/>
+  <arg name="node_name" default="geometric_controller"/>
+  <arg name="output" default="screen"/>
+  <arg name="visualization" default="true"/>
+
+  <!-- Topic remapping arguments -->
+  <arg name="pose_topic" default="/mavros/local_position/pose"/>
+  <arg name="velocity_topic" default="/mavros/local_position/velocity_local"/>
+  <arg name="state_topic" default="/mavros/state"/>
+  <arg name="bodyrate_cmd_topic" default="/mavros/setpoint_raw/attitude"/>
+  
+  <!-- Reference input topics -->
+  <arg name="reference_twist_topic" default="/reference/setpoint"/>
+  <arg name="reference_flat_topic" default="/reference/flatsetpoint"/>
+  <arg name="reference_yaw_topic" default="/reference/yaw"/>
+  <arg name="reference_trajectory_topic" default="/command/trajectory"/>
+  
+  <!-- Geometric Controller Node -->
+  <node pkg="geometric_controller" 
+        type="geometric_controller_node" 
+        name="$(arg node_name)" 
+        output="$(arg output)">
+    
+    <!-- Load configuration from YAML file -->
+    <rosparam file="$(arg config_file)" command="load"/>
+    
+    <!-- Topic remappings -->
+    <remap from="mavros/local_position/pose" to="$(arg pose_topic)"/>
+    <remap from="mavros/local_position/velocity_local" to="$(arg velocity_topic)"/>
+    <remap from="mavros/state" to="$(arg state_topic)"/>
+    <remap from="command/bodyrate_command" to="$(arg bodyrate_cmd_topic)"/>
+    
+    <!-- Reference remappings -->
+    <remap from="reference/setpoint" to="$(arg reference_twist_topic)"/>
+    <remap from="reference/flatsetpoint" to="$(arg reference_flat_topic)"/>
+    <remap from="reference/yaw" to="$(arg reference_yaw_topic)"/>
+    <remap from="command/trajectory" to="$(arg reference_trajectory_topic)"/>
+  </node>
+
+  <!-- Launch rqt_reconfigure -->
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen" name="rqt_reconfigure" />
+
+  <group if="$(arg visualization)">
+      <node type="rviz" name="rviz" pkg="rviz" args="-d $(find geometric_controller)/rviz/config_file.rviz" />
+  </group>
+
+</launch>
