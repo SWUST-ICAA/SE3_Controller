@@ -134,8 +134,12 @@ class geometricCtrl {
   Eigen::Vector3d gravity_{Eigen::Vector3d(0.0, 0.0, -9.8)};
   Eigen::Vector4d mavAtt_, q_des;
   Eigen::Vector4d cmdBodyRate_;  //{wx, wy, wz, Thrust}
-  Eigen::Vector3d Kpos_, Kvel_, D_;
-  double Kpos_x_, Kpos_y_, Kpos_z_, Kvel_x_, Kvel_y_, Kvel_z_;
+  Eigen::Vector3d Kpos_, Kvel_, D_, Kint_;
+  double Kpos_x_, Kpos_y_, Kpos_z_, Kvel_x_, Kvel_y_, Kvel_z_, Kint_x_, Kint_y_, Kint_z_;
+  Eigen::Vector3d pos_int_;  // Position integral error
+  double max_int_;  // Anti-windup limit
+  bool enable_integral_;  // Enable/disable integral action
+
   int posehistory_window_;
 
   void pubRateCommands(const Eigen::Vector4d &cmd, const Eigen::Vector4d &target_attitude);
@@ -154,6 +158,7 @@ class geometricCtrl {
   void statusloopCallback(const ros::TimerEvent &event);
   bool ctrltriggerCallback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
   bool landCallback(std_srvs::SetBool::Request &request, std_srvs::SetBool::Response &response);
+  void resetIntegral();
   geometry_msgs::PoseStamped vector3d2PoseStampedMsg(Eigen::Vector3d &position, Eigen::Vector4d &orientation);
   void computeBodyRateCmd(Eigen::Vector4d &bodyrate_cmd, const Eigen::Vector3d &target_acc);
   Eigen::Vector3d controlPosition(const Eigen::Vector3d &target_pos, const Eigen::Vector3d &target_vel,

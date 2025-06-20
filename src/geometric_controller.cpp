@@ -68,7 +68,7 @@ geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &n
   statusloop_timer_ = nh_.createTimer(ros::Duration(0.5), &geometricCtrl::statusloopCallback,
                                       this);  // Define timer for constant loop rate
 
-  angularVelPub_ = nh_.advertise<mavros_msgs::AttitudeTarget>("command/bodyrate_command", 1);
+  angularVelPub_ = nh_.advertise<mavros_msgs::AttitudeTarget>("mavros/setpoint_raw/attitude", 1);
   referencePosePub_ = nh_.advertise<geometry_msgs::PoseStamped>("reference/pose", 1);
   target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
   posehistoryPub_ = nh_.advertise<nav_msgs::Path>("geometric_controller/path", 10);
@@ -105,6 +105,11 @@ geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &n
   nh_private_.param<double>("Kv_x", Kvel_x_, 1.5);
   nh_private_.param<double>("Kv_y", Kvel_y_, 1.5);
   nh_private_.param<double>("Kv_z", Kvel_z_, 3.3);
+  nh_private_.param<double>("Kint_x", Kint_x_, 0.0);
+  nh_private_.param<double>("Kint_y", Kint_y_, 0.0);
+  nh_private_.param<double>("Kint_z", Kint_z_, 0.0);
+  nh_private_.param<double>("max_integral", max_int_, 2.0);
+  nh_private_.param<bool>("enable_integral", enable_integral_, false);
   nh_private_.param<int>("posehistory_window", posehistory_window_, 200);
   nh_private_.param<double>("init_pos_x", initTargetPos_x_, 0.0);
   nh_private_.param<double>("init_pos_y", initTargetPos_y_, 0.0);
@@ -114,8 +119,10 @@ geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &n
   targetVel_ << 0.0, 0.0, 0.0;
   mavPos_ << 0.0, 0.0, 0.0;
   mavVel_ << 0.0, 0.0, 0.0;
+  pos_int_ << 0.0, 0.0, 0.0;
   Kpos_ << -Kpos_x_, -Kpos_y_, -Kpos_z_;
   Kvel_ << -Kvel_x_, -Kvel_y_, -Kvel_z_;
+  Kint_ << -Kint_x_, -Kint_y_, -Kint_z_;
 
   // Initialize controller based on controller_type parameter
   switch (controller_type) {
@@ -127,7 +134,7 @@ geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &n
     case 2:  // ERROR_GEOMETRIC
       controller_ = std::make_shared<NonlinearGeometricControl>(attctrl_tau);
       ctrl_mode_ = ERROR_GEOMETRIC;
-      ROS_INFO("Initialized Nonlinear Geometric Controller (SO(3) Error)");
+      ROS_INFO("Initialized Nonlinear Geometric Controller (SE(3) Error)");
       break;
     case 3:  // JERK_TRACKING
       controller_ = std::make_shared<JerkTrackingControl>();
@@ -141,6 +148,10 @@ geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &n
 }
 geometricCtrl::~geometricCtrl() {
   // Destructor
+}
+
+void geometricCtrl::resetIntegral() {
+  pos_int_ = Eigen::Vector3d::Zero();
 }
 
 void geometricCtrl::targetCallback(const geometry_msgs::TwistStamped &msg) {
@@ -256,6 +267,7 @@ void geometricCtrl::cmdloopCallback(const ros::TimerEvent &event) {
 
     case LANDING: {
       geometry_msgs::PoseStamped landingmsg;
+      resetIntegral();  // Reset integral when landing
       landingmsg.header.stamp = ros::Time::now();
       landingmsg.pose = home_pose_;
       landingmsg.pose.position.z = landingmsg.pose.position.z + 1.0;
@@ -412,11 +424,24 @@ void geometricCtrl::computeBodyRateCmd(Eigen::Vector4d &bodyrate_cmd, const Eige
 }
 
 Eigen::Vector3d geometricCtrl::poscontroller(const Eigen::Vector3d &pos_error, const Eigen::Vector3d &vel_error) {
-  Eigen::Vector3d a_fb =
-      Kpos_.asDiagonal() * pos_error + Kvel_.asDiagonal() * vel_error;  // feedforward term for trajectory error
+  // Update integral error with anti-windup
+  if (enable_integral_) {
+    pos_int_ += pos_error * 0.01;  // dt = 0.01 from cmdloop timer
+    
+    // Anti-windup: limit integral error
+    for (int i = 0; i < 3; i++) {
+      pos_int_(i) = std::max(-max_int_, std::min(max_int_, pos_int_(i)));
+    }
+  }
+  
+  // PID control law
+  Eigen::Vector3d a_fb = Kpos_.asDiagonal() * pos_error + 
+                         Kvel_.asDiagonal() * vel_error + 
+                         Kint_.asDiagonal() * pos_int_;
 
+  // Clip acceleration
   if (a_fb.norm() > max_fb_acc_)
-    a_fb = (max_fb_acc_ / a_fb.norm()) * a_fb;  // Clip acceleration if reference is too large
+    a_fb = (max_fb_acc_ / a_fb.norm()) * a_fb;
 
   return a_fb;
 }
@@ -474,3 +499,5 @@ void geometricCtrl::dynamicReconfigureCallback(geometric_controller::GeometricCo
   Kpos_ << -Kpos_x_, -Kpos_y_, -Kpos_z_;
   Kvel_ << -Kvel_x_, -Kvel_y_, -Kvel_z_;
 }
+
+

@@ -1,49 +1,70 @@
-# SE3 Geometric Controller
+# Geometric Controller
 
-基于微分平坦性的SE(3)几何无人机控制器。
+[![ROS Version](https://img.shields.io/badge/ROS-Noetic-blue.svg)](http://wiki.ros.org/noetic)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![Version](https://img.shields.io/badge/version-v1.2.0-green.svg)](https://github.com/your-repo/geometric_controller)
 
-## 功能特点
+SE(3) geometric controller for UAVs using differential flatness-based trajectory tracking.
 
-- 基于微分平坦性的几何控制
-- 支持多种控制模式：
-  - 非线性几何控制
-  - 非线性姿态控制
-  - Jerk跟踪控制
-- 自动起飞和降落功能
-- 动态参数重配置
-- 轨迹跟踪与位置控制
+## Features
 
-## 快速使用
+- Three control modes: Quaternion-based, SE(3) geometric, and jerk tracking
+- Real-time parameter tuning via dynamic reconfigure
+- Automatic takeoff and landing
 
-### 启动控制器
+## Installation
+
 ```bash
-roslaunch geometric_controller geometric_controller.launch
+cd ~/catkin_ws/src
+git clone https://github.com/SWUST-ICAA/mavros_controllers.git
+cd .. && catkin_make
 ```
 
-### 降落指令
+## Usage
+
 ```bash
+# Basic launch
+roslaunch geometric_controller geometric_controller.launch
+
+
+# Landing service
 rosservice call /land "data: true"
 ```
 
-## 控制参数
+## Configuration
 
-主要控制参数在`config/geometric_controller_config.yaml`中配置：
+Select controller type in `config/geometric_controller_config.yaml`:
+- `1`: Quaternion-based attitude control
+- `2`: SE(3) geometric control (default)
+- `3`: Jerk feedforward control
 
-- `Kp_x, Kp_y, Kp_z`: 位置控制增益
-- `Kv_x, Kv_y, Kv_z`: 速度控制增益
-- `attctrl_constant`: 姿态控制时间常数
+## Topics
 
-## 话题接口
+### Subscribed
+- `/mavros/local_position/pose` - Current pose from flight controller
+- `/mavros/local_position/velocity_local` - Current velocity in local frame
+- `/mavros/state` - Flight controller state (armed, mode, etc.)
+- `/reference/flatsetpoint` - Flat trajectory reference (position, velocity, acceleration)
+- `/command/trajectory` - Multi-DOF trajectory commands
+- `/reference/setpoint` - Simple position/velocity setpoint
+- `/reference/yaw` - Yaw angle reference
 
-### 订阅
-- `mavros/local_position/pose`: 当前位置和姿态
-- `mavros/local_position/velocity_local`: 当前速度
-- `mavros/state`: 飞控状态
+### Published
+- `/mavros/setpoint_raw/attitude` - Body rate and thrust commands to flight controller
+- `/reference/pose` - Current reference pose for visualization
+- `/geometric_controller/path` - Trajectory history for visualization
+- `/mavros/companion_process/status` - Controller status
+- `/mavros/setpoint_position/local` - Position setpoint for landing
 
-### 发布
-- `command/bodyrate_command`: 体框角速度指令
-- `reference/pose`: 参考位姿
+## References
 
-## 作者
+- Lee, T., Leok, M., & McClamroch, N. H. (2010). Geometric tracking control of a quadrotor UAV on SE(3). CDC.
+- Faessler, M., et al. (2017). Differential flatness of quadrotor dynamics subject to rotor drag. IEEE RA-L.
 
-- **Nanwan** - nanwan2004@126.com
+## Author
+
+**Nanwan** - nanwan2004@126.com
+
+## License
+
+BSD-3-Clause
