@@ -139,6 +139,7 @@ class MavrosControllers {
   Eigen::Vector3d pos_int_;  // Position integral error
   double max_int_;  // Anti-windup limit
   bool enable_integral_;  // Enable/disable integral action
+  ros::Time start_time_;  // Record start time for integral control
 
   int posehistory_window_;
 

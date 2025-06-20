@@ -120,6 +120,7 @@ MavrosControllers::MavrosControllers(const ros::NodeHandle &nh, const ros::NodeH
   mavPos_ << 0.0, 0.0, 0.0;
   mavVel_ << 0.0, 0.0, 0.0;
   pos_int_ << 0.0, 0.0, 0.0;
+  start_time_ = ros::Time::now();  // Initialize start time
   Kpos_ << -Kpos_x_, -Kpos_y_, -Kpos_z_;
   Kvel_ << -Kvel_x_, -Kvel_y_, -Kvel_z_;
   Kint_ << -Kint_x_, -Kint_y_, -Kint_z_;
@@ -426,11 +427,17 @@ void MavrosControllers::computeBodyRateCmd(Eigen::Vector4d &bodyrate_cmd, const 
 Eigen::Vector3d MavrosControllers::poscontroller(const Eigen::Vector3d &pos_error, const Eigen::Vector3d &vel_error) {
   // Update integral error with anti-windup
   if (enable_integral_) {
-    pos_int_ += pos_error * 0.01;  // dt = 0.01 from cmdloop timer
-    
-    // Anti-windup: limit integral error
-    for (int i = 0; i < 3; i++) {
-      pos_int_(i) = std::max(-max_int_, std::min(max_int_, pos_int_(i)));
+    // 只有在启动超过3秒后才进行积分计算
+    double time_since_start = (ros::Time::now() - start_time_).toSec();
+    if (time_since_start > 3.0) {
+      pos_int_ += pos_error * 0.01;  // dt = 0.01 from cmdloop timer
+      
+      // Anti-windup: limit integral error
+      for (int i = 0; i < 3; i++) {
+        pos_int_(i) = std::max(-max_int_, std::min(max_int_, pos_int_(i)));
+      }
+    } else {
+      resetIntegral();  // 5秒内保持积分项为0
     }
   }
   
