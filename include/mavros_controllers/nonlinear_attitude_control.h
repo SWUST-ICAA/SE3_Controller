@@ -38,16 +38,16 @@
  * @author Nanwan <nanwan2004@126.com>
  */
 
-#ifndef NONLINEAR_GEOMETRIC_CONTROL_H
-#define NONLINEAR_GEOMETRIC_CONTROL_H
+#ifndef NONLINEAR_ATTITUDE_CONTROL_H
+#define NONLINEAR_ATTITUDE_CONTROL_H
 
-#include "geometric_controller/common.h"
-#include "geometric_controller/control.h"
+#include "mavros_controllers/common.h"
+#include "mavros_controllers/control.h"
 
-class NonlinearGeometricControl : public Control {
+class NonlinearAttitudeControl : public Control {
  public:
-  NonlinearGeometricControl(double attctrl_tau);
-  virtual ~NonlinearGeometricControl();
+  NonlinearAttitudeControl(double attctrl_tau);
+  virtual ~NonlinearAttitudeControl();
   void Update(Eigen::Vector4d &curr_att, const Eigen::Vector4d &ref_att, const Eigen::Vector3d &ref_acc,
               const Eigen::Vector3d &ref_jerk) override;
 

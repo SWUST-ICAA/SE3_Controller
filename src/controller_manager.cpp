@@ -38,44 +38,44 @@
  * @author Nanwan <nanwan2004@126.com>
  */
 
-#include "geometric_controller/geometric_controller.h"
-#include "geometric_controller/jerk_tracking_control.h"
-#include "geometric_controller/nonlinear_attitude_control.h"
-#include "geometric_controller/nonlinear_geometric_control.h"
+#include "mavros_controllers/controller_manager.h"
+#include "mavros_controllers/jerk_tracking_control.h"
+#include "mavros_controllers/nonlinear_attitude_control.h"
+#include "mavros_controllers/nonlinear_geometric_control.h"
 
 using namespace Eigen;
 using namespace std;
 // Constructor
-geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
+MavrosControllers::MavrosControllers(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
     : nh_(nh), nh_private_(nh_private), node_state(WAITING_FOR_HOME_POSE){
   referenceSub_ =
-      nh_.subscribe("reference/setpoint", 1, &geometricCtrl::targetCallback, this, ros::TransportHints().tcpNoDelay());
-  flatreferenceSub_ = nh_.subscribe("reference/flatsetpoint", 1, &geometricCtrl::flattargetCallback, this,
+      nh_.subscribe("reference/setpoint", 1, &MavrosControllers::targetCallback, this, ros::TransportHints().tcpNoDelay());
+  flatreferenceSub_ = nh_.subscribe("reference/flatsetpoint", 1, &MavrosControllers::flattargetCallback, this,
                                     ros::TransportHints().tcpNoDelay());
   yawreferenceSub_ =
-      nh_.subscribe("reference/yaw", 1, &geometricCtrl::yawtargetCallback, this, ros::TransportHints().tcpNoDelay());
-  multiDOFJointSub_ = nh_.subscribe("command/trajectory", 1, &geometricCtrl::multiDOFJointCallback, this,
+      nh_.subscribe("reference/yaw", 1, &MavrosControllers::yawtargetCallback, this, ros::TransportHints().tcpNoDelay());
+  multiDOFJointSub_ = nh_.subscribe("command/trajectory", 1, &MavrosControllers::multiDOFJointCallback, this,
                                     ros::TransportHints().tcpNoDelay());
   mavstateSub_ =
-      nh_.subscribe("mavros/state", 1, &geometricCtrl::mavstateCallback, this, ros::TransportHints().tcpNoDelay());
-  mavposeSub_ = nh_.subscribe("mavros/local_position/pose", 1, &geometricCtrl::mavposeCallback, this,
+      nh_.subscribe("mavros/state", 1, &MavrosControllers::mavstateCallback, this, ros::TransportHints().tcpNoDelay());
+  mavposeSub_ = nh_.subscribe("mavros/local_position/pose", 1, &MavrosControllers::mavposeCallback, this,
                               ros::TransportHints().tcpNoDelay());
-  mavtwistSub_ = nh_.subscribe("mavros/local_position/velocity_local", 1, &geometricCtrl::mavtwistCallback, this,
+  mavtwistSub_ = nh_.subscribe("mavros/local_position/velocity_local", 1, &MavrosControllers::mavtwistCallback, this,
                                ros::TransportHints().tcpNoDelay());
-  ctrltriggerServ_ = nh_.advertiseService("trigger_rlcontroller", &geometricCtrl::ctrltriggerCallback, this);
-  cmdloop_timer_ = nh_.createTimer(ros::Duration(0.01), &geometricCtrl::cmdloopCallback,
+  ctrltriggerServ_ = nh_.advertiseService("trigger_rlcontroller", &MavrosControllers::ctrltriggerCallback, this);
+  cmdloop_timer_ = nh_.createTimer(ros::Duration(0.01), &MavrosControllers::cmdloopCallback,
                                    this);  // Define timer for constant loop rate
-  statusloop_timer_ = nh_.createTimer(ros::Duration(0.5), &geometricCtrl::statusloopCallback,
+  statusloop_timer_ = nh_.createTimer(ros::Duration(0.5), &MavrosControllers::statusloopCallback,
                                       this);  // Define timer for constant loop rate
 
   angularVelPub_ = nh_.advertise<mavros_msgs::AttitudeTarget>("mavros/setpoint_raw/attitude", 1);
   referencePosePub_ = nh_.advertise<geometry_msgs::PoseStamped>("reference/pose", 1);
   target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
-  posehistoryPub_ = nh_.advertise<nav_msgs::Path>("geometric_controller/path", 10);
+  posehistoryPub_ = nh_.advertise<nav_msgs::Path>("mavros_controllers/path", 10);
   systemstatusPub_ = nh_.advertise<mavros_msgs::CompanionProcessStatus>("mavros/companion_process/status", 1);
   arming_client_ = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
   set_mode_client_ = nh_.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
-  land_service_ = nh_.advertiseService("land", &geometricCtrl::landCallback, this);
+  land_service_ = nh_.advertiseService("land", &MavrosControllers::landCallback, this);
   
   // Controller type selection
   int controller_type;
@@ -146,15 +146,15 @@ geometricCtrl::geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &n
       ctrl_mode_ = ERROR_GEOMETRIC;
     }
 }
-geometricCtrl::~geometricCtrl() {
+MavrosControllers::~MavrosControllers() {
   // Destructor
 }
 
-void geometricCtrl::resetIntegral() {
+void MavrosControllers::resetIntegral() {
   pos_int_ = Eigen::Vector3d::Zero();
 }
 
-void geometricCtrl::targetCallback(const geometry_msgs::TwistStamped &msg) {
+void MavrosControllers::targetCallback(const geometry_msgs::TwistStamped &msg) {
   reference_request_last_ = reference_request_now_;
   targetPos_prev_ = targetPos_;
   targetVel_prev_ = targetVel_;
@@ -171,7 +171,7 @@ void geometricCtrl::targetCallback(const geometry_msgs::TwistStamped &msg) {
     targetAcc_ = Eigen::Vector3d::Zero();
 }
 
-void geometricCtrl::flattargetCallback(const geometric_controller::FlatTarget &msg) {
+void MavrosControllers::flattargetCallback(const mavros_controllers::FlatTarget &msg) {
   reference_request_last_ = reference_request_now_;
 
   targetPos_prev_ = targetPos_;
@@ -192,11 +192,11 @@ void geometricCtrl::flattargetCallback(const geometric_controller::FlatTarget &m
   }
 }
 
-void geometricCtrl::yawtargetCallback(const std_msgs::Float32 &msg) {
+void MavrosControllers::yawtargetCallback(const std_msgs::Float32 &msg) {
   if (!velocity_yaw_) mavYaw_ = double(msg.data);
 }
 
-void geometricCtrl::multiDOFJointCallback(const trajectory_msgs::MultiDOFJointTrajectory &msg) {
+void MavrosControllers::multiDOFJointCallback(const trajectory_msgs::MultiDOFJointTrajectory &msg) {
   trajectory_msgs::MultiDOFJointTrajectoryPoint pt = msg.points[0];
   reference_request_last_ = reference_request_now_;
 
@@ -219,7 +219,7 @@ void geometricCtrl::multiDOFJointCallback(const trajectory_msgs::MultiDOFJointTr
   }
 }
 
-void geometricCtrl::mavposeCallback(const geometry_msgs::PoseStamped &msg) {
+void MavrosControllers::mavposeCallback(const geometry_msgs::PoseStamped &msg) {
   if (!received_home_pose) {
     received_home_pose = true;
     home_pose_ = msg.pose;
@@ -232,17 +232,17 @@ void geometricCtrl::mavposeCallback(const geometry_msgs::PoseStamped &msg) {
   mavAtt_(3) = msg.pose.orientation.z;
 }
 
-void geometricCtrl::mavtwistCallback(const geometry_msgs::TwistStamped &msg) {
+void MavrosControllers::mavtwistCallback(const geometry_msgs::TwistStamped &msg) {
   mavVel_ = toEigen(msg.twist.linear);
   mavRate_ = toEigen(msg.twist.angular);
 }
 
-bool geometricCtrl::landCallback(std_srvs::SetBool::Request &request, std_srvs::SetBool::Response &response) {
+bool MavrosControllers::landCallback(std_srvs::SetBool::Request &request, std_srvs::SetBool::Response &response) {
   node_state = LANDING;
   return true;
 }
 
-void geometricCtrl::cmdloopCallback(const ros::TimerEvent &event) {
+void MavrosControllers::cmdloopCallback(const ros::TimerEvent &event) {
   switch (node_state) {
     case WAITING_FOR_HOME_POSE:
       waitForPredicate(&received_home_pose, "Waiting for home pose...");
@@ -283,9 +283,9 @@ void geometricCtrl::cmdloopCallback(const ros::TimerEvent &event) {
   }
 }
 
-void geometricCtrl::mavstateCallback(const mavros_msgs::State::ConstPtr &msg) { current_state_ = *msg; }
+void MavrosControllers::mavstateCallback(const mavros_msgs::State::ConstPtr &msg) { current_state_ = *msg; }
 
-void geometricCtrl::statusloopCallback(const ros::TimerEvent &event) {
+void MavrosControllers::statusloopCallback(const ros::TimerEvent &event) {
   if (auto_takeoff) {
     // Enable OFFBoard mode and arm automatically
     // This will only run if the vehicle is simulated
@@ -309,7 +309,7 @@ void geometricCtrl::statusloopCallback(const ros::TimerEvent &event) {
   pubSystemStatus();
 }
 
-void geometricCtrl::pubReferencePose(const Eigen::Vector3d &target_position, const Eigen::Vector4d &target_attitude) {
+void MavrosControllers::pubReferencePose(const Eigen::Vector3d &target_position, const Eigen::Vector4d &target_attitude) {
   geometry_msgs::PoseStamped msg;
 
   msg.header.stamp = ros::Time::now();
@@ -324,7 +324,7 @@ void geometricCtrl::pubReferencePose(const Eigen::Vector3d &target_position, con
   referencePosePub_.publish(msg);
 }
 
-void geometricCtrl::pubRateCommands(const Eigen::Vector4d &cmd, const Eigen::Vector4d &target_attitude) {
+void MavrosControllers::pubRateCommands(const Eigen::Vector4d &cmd, const Eigen::Vector4d &target_attitude) {
   mavros_msgs::AttitudeTarget msg;
 
   msg.header.stamp = ros::Time::now();
@@ -342,7 +342,7 @@ void geometricCtrl::pubRateCommands(const Eigen::Vector4d &cmd, const Eigen::Vec
   angularVelPub_.publish(msg);
 }
 
-void geometricCtrl::pubPoseHistory() {
+void MavrosControllers::pubPoseHistory() {
   nav_msgs::Path msg;
 
   msg.header.stamp = ros::Time::now();
@@ -352,7 +352,7 @@ void geometricCtrl::pubPoseHistory() {
   posehistoryPub_.publish(msg);
 }
 
-void geometricCtrl::pubSystemStatus() {
+void MavrosControllers::pubSystemStatus() {
   mavros_msgs::CompanionProcessStatus msg;
 
   msg.header.stamp = ros::Time::now();
@@ -362,14 +362,14 @@ void geometricCtrl::pubSystemStatus() {
   systemstatusPub_.publish(msg);
 }
 
-void geometricCtrl::appendPoseHistory() {
+void MavrosControllers::appendPoseHistory() {
   posehistory_vector_.insert(posehistory_vector_.begin(), vector3d2PoseStampedMsg(mavPos_, mavAtt_));
   if (posehistory_vector_.size() > posehistory_window_) {
     posehistory_vector_.pop_back();
   }
 }
 
-geometry_msgs::PoseStamped geometricCtrl::vector3d2PoseStampedMsg(Eigen::Vector3d &position,
+geometry_msgs::PoseStamped MavrosControllers::vector3d2PoseStampedMsg(Eigen::Vector3d &position,
                                                                   Eigen::Vector4d &orientation) {
   geometry_msgs::PoseStamped encode_msg;
   encode_msg.header.stamp = ros::Time::now();
@@ -384,7 +384,7 @@ geometry_msgs::PoseStamped geometricCtrl::vector3d2PoseStampedMsg(Eigen::Vector3
   return encode_msg;
 }
 
-Eigen::Vector3d geometricCtrl::controlPosition(const Eigen::Vector3d &target_pos, const Eigen::Vector3d &target_vel,
+Eigen::Vector3d MavrosControllers::controlPosition(const Eigen::Vector3d &target_pos, const Eigen::Vector3d &target_vel,
                                                const Eigen::Vector3d &target_acc) {
   /// Compute BodyRate commands using differential flatness
   /// Controller based on Faessler 2017
@@ -411,7 +411,7 @@ Eigen::Vector3d geometricCtrl::controlPosition(const Eigen::Vector3d &target_pos
   return a_des;
 }
 
-void geometricCtrl::computeBodyRateCmd(Eigen::Vector4d &bodyrate_cmd, const Eigen::Vector3d &a_des) {
+void MavrosControllers::computeBodyRateCmd(Eigen::Vector4d &bodyrate_cmd, const Eigen::Vector3d &a_des) {
   // Reference attitude
   q_des = acc2quaternion(a_des, mavYaw_);
 
@@ -423,7 +423,7 @@ void geometricCtrl::computeBodyRateCmd(Eigen::Vector4d &bodyrate_cmd, const Eige
                                       norm_thrust_offset_));  // Calculate thrustcontroller_->getDesiredThrust()(3);
 }
 
-Eigen::Vector3d geometricCtrl::poscontroller(const Eigen::Vector3d &pos_error, const Eigen::Vector3d &vel_error) {
+Eigen::Vector3d MavrosControllers::poscontroller(const Eigen::Vector3d &pos_error, const Eigen::Vector3d &vel_error) {
   // Update integral error with anti-windup
   if (enable_integral_) {
     pos_int_ += pos_error * 0.01;  // dt = 0.01 from cmdloop timer
@@ -446,7 +446,7 @@ Eigen::Vector3d geometricCtrl::poscontroller(const Eigen::Vector3d &pos_error, c
   return a_fb;
 }
 
-Eigen::Vector4d geometricCtrl::acc2quaternion(const Eigen::Vector3d &vector_acc, const double &yaw) {
+Eigen::Vector4d MavrosControllers::acc2quaternion(const Eigen::Vector3d &vector_acc, const double &yaw) {
   Eigen::Vector4d quat;
   Eigen::Vector3d zb_des, yb_des, xb_des, proj_xb_des;
   Eigen::Matrix3d rotmat;
@@ -462,7 +462,7 @@ Eigen::Vector4d geometricCtrl::acc2quaternion(const Eigen::Vector3d &vector_acc,
   return quat;
 }
 
-bool geometricCtrl::ctrltriggerCallback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res) {
+bool MavrosControllers::ctrltriggerCallback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res) {
   unsigned char mode = req.data;
 
   ctrl_mode_ = mode;
@@ -471,7 +471,7 @@ bool geometricCtrl::ctrltriggerCallback(std_srvs::SetBool::Request &req, std_srv
   return true;
 }
 
-void geometricCtrl::dynamicReconfigureCallback(geometric_controller::GeometricControllerConfig &config,
+void MavrosControllers::dynamicReconfigureCallback(mavros_controllers::GeometricControllerConfig &config,
                                                uint32_t level) {
   if (max_fb_acc_ != config.max_acc) {
     max_fb_acc_ = config.max_acc;
@@ -494,10 +494,30 @@ void geometricCtrl::dynamicReconfigureCallback(geometric_controller::GeometricCo
   } else if (Kvel_z_ != config.Kv_z) {
     Kvel_z_ = config.Kv_z;
     ROS_INFO("Reconfigure request : Kv_z  = %.2f  ", config.Kv_z);
+  } else if (Kint_x_ != config.Kint_x) {
+    Kint_x_ = config.Kint_x;
+    ROS_INFO("Reconfigure request : Kint_x = %.2f  ", config.Kint_x);
+  } else if (Kint_y_ != config.Kint_y) {
+    Kint_y_ = config.Kint_y;
+    ROS_INFO("Reconfigure request : Kint_y = %.2f  ", config.Kint_y);
+  } else if (Kint_z_ != config.Kint_z) {
+    Kint_z_ = config.Kint_z;
+    ROS_INFO("Reconfigure request : Kint_z = %.2f  ", config.Kint_z);
+  } else if (max_int_ != config.max_integral) {
+    max_int_ = config.max_integral;
+    ROS_INFO("Reconfigure request : max_integral = %.2f  ", config.max_integral);
+  } else if (enable_integral_ != config.enable_integral) {
+    enable_integral_ = config.enable_integral;
+    if (enable_integral_) {
+      ROS_INFO("Integral control enabled");
+      resetIntegral();  // Reset integral when enabling
+    } else {
+      ROS_INFO("Integral control disabled");
+      resetIntegral();  // Reset integral when disabling
+    }
   }
 
   Kpos_ << -Kpos_x_, -Kpos_y_, -Kpos_z_;
   Kvel_ << -Kvel_x_, -Kvel_y_, -Kvel_z_;
+  Kint_ << -Kint_x_, -Kint_y_, -Kint_z_;
 }
-
-

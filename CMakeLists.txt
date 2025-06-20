@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.12)
-project(geometric_controller)
+project(mavros_controllers)
 
 add_definitions(-std=c++11)
 
@@ -30,12 +30,12 @@ generate_messages(
 )
 
 generate_dynamic_reconfigure_options(
-  config/GeometricController.cfg
+  config/MavrosControllers.cfg
 )
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES geometric_controller
+  LIBRARIES mavros_controllers
   CATKIN_DEPENDS roscpp rospy std_msgs mavros_msgs geometry_msgs sensor_msgs tf message_runtime
 )
 
@@ -50,22 +50,22 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/geometric_controller.cpp 
+  src/controller_manager.cpp 
   src/nonlinear_attitude_control.cpp
   src/nonlinear_geometric_control.cpp
   src/jerk_tracking_control.cpp
 )
-add_dependencies(geometric_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(mavros_controllers ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 ############
 # BINARIES #
 ############
-add_executable(geometric_controller_node
-  src/geometric_controller_node.cpp
+add_executable(mavros_controllers_node
+  src/main.cpp
 )
-add_dependencies(geometric_controller_node geometric_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(geometric_controller_node ${PROJECT_NAME} ${catkin_LIBRARIES})
+add_dependencies(mavros_controllers_node mavros_controllers ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(mavros_controllers_node ${PROJECT_NAME} ${catkin_LIBRARIES})
 ##########
 # EXPORT #
 ##########

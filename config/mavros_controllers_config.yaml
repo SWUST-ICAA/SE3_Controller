@@ -18,21 +18,21 @@ velocity_yaw: false
 # These gains affect position tracking performance
 Kp_x: 10.0  # X-axis position gain
 Kp_y: 10.0  # Y-axis position gain  
-Kp_z: 20.0  # Z-axis position gain (typically higher for altitude control)
+Kp_z: 20  # Z-axis position gain (typically higher for altitude control)
 
 # Velocity Controller Gains
 # These gains affect velocity tracking performance
 Kv_x: 5.0   # X-axis velocity gain
 Kv_y: 5.0   # Y-axis velocity gain
-Kv_z: 10.0  # Z-axis velocity gain
+Kv_z: 10  # Z-axis velocity gain
 
 # Integral Controller Gains (optional)
 # Set enable_integral to true to activate integral action
-enable_integral: false
-Kint_x: 0.0  # X-axis integral gain
-Kint_y: 0.0  # Y-axis integral gain  
-Kint_z: 0.0  # Z-axis integral gain
-max_integral: 2.0  # Anti-windup limit for integral term
+enable_integral: true
+Kint_x: 2  # X-axis integral gain
+Kint_y: 2  # Y-axis integral gain  
+Kint_z: 2  # Z-axis integral gain
+max_integral: 0.5  # Anti-windup limit for integral term
 
 # Drag Compensation
 # Compensates for aerodynamic drag effects
@@ -52,7 +52,7 @@ normalizedthrust_offset: 0.1      # Thrust offset for hover
 
 # Acceleration Constraints
 # Maximum feedback acceleration (m/s^2)
-max_acc: 10.0
+max_acc: 5.0
 
 # Initial Position
 # Starting position when controller is activated

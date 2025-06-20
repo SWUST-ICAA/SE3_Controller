@@ -30,28 +30,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
+
 /**
- * @brief Geometric Controller Node
+ * @brief Controller base class
  *
- * Geometric controller ROS Node Implementation
  *
  * @author Nanwan <nanwan2004@126.com>
  */
 
-#include "geometric_controller/geometric_controller.h"
+#ifndef NONLINEAR_GEOMETRIC_CONTROL_H
+#define NONLINEAR_GEOMETRIC_CONTROL_H
 
-int main(int argc, char** argv) {
-  ros::init(argc, argv, "geometric_controller");
-  ros::NodeHandle nh("");
-  ros::NodeHandle nh_private("~");
+#include "mavros_controllers/common.h"
+#include "mavros_controllers/control.h"
 
-  geometricCtrl* geometricController = new geometricCtrl(nh, nh_private);
+class NonlinearGeometricControl : public Control {
+ public:
+  NonlinearGeometricControl(double attctrl_tau);
+  virtual ~NonlinearGeometricControl();
+  void Update(Eigen::Vector4d &curr_att, const Eigen::Vector4d &ref_att, const Eigen::Vector3d &ref_acc,
+              const Eigen::Vector3d &ref_jerk) override;
 
-  dynamic_reconfigure::Server<geometric_controller::GeometricControllerConfig> srv;
-  dynamic_reconfigure::Server<geometric_controller::GeometricControllerConfig>::CallbackType f;
-  f = boost::bind(&geometricCtrl::dynamicReconfigureCallback, geometricController, _1, _2);
-  srv.setCallback(f);
+ private:
+  double attctrl_tau_{1.0};
+};
 
-  ros::spin();
-  return 0;
-}
+#endif

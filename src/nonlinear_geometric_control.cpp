@@ -38,7 +38,7 @@
  * @author Nanwan <nanwan2004@126.com>
  */
 
-#include "geometric_controller/nonlinear_geometric_control.h"
+#include "mavros_controllers/nonlinear_geometric_control.h"
 
 NonlinearGeometricControl::NonlinearGeometricControl(double attctrl_tau) : Control() { attctrl_tau_ = attctrl_tau; }
 

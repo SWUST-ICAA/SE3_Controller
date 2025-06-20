@@ -38,7 +38,7 @@
  * @author Nanwan <nanwan2004@126.com>
  */
 
-#include "geometric_controller/jerk_tracking_control.h"
+#include "mavros_controllers/jerk_tracking_control.h"
 
 JerkTrackingControl::JerkTrackingControl() : Control() {}
 

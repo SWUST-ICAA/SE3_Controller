@@ -1,14 +1,14 @@
 <launch>
   <!-- Arguments -->
-  <arg name="config_file" default="$(find geometric_controller)/config/geometric_controller_config.yaml"/>
-  <arg name="node_name" default="geometric_controller"/>
+  <arg name="config_file" default="$(find mavros_controllers)/config/mavros_controllers_config.yaml"/>
+  <arg name="node_name" default="mavros_controller"/>
   <arg name="output" default="screen"/>
   <arg name="enable_rviz" default="false"/>
-  <arg name="rviz_config" default="$(find geometric_controller)/rviz/config_file.rviz"/>
+  <arg name="rviz_config" default="$(find mavros_controllers)/rviz/config_file.rviz"/>
 
   <!-- Geometric Controller Node -->
-  <node pkg="geometric_controller" 
-        type="geometric_controller_node" 
+  <node pkg="mavros_controllers" 
+        type="mavros_controllers_node" 
         name="$(arg node_name)" 
         output="$(arg output)">
     

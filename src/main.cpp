@@ -30,29 +30,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-
 /**
- * @brief Controller base class
+ * @brief Geometric Controller Node
  *
+ * Geometric controller ROS Node Implementation
  *
  * @author Nanwan <nanwan2004@126.com>
  */
 
-#ifndef NONLINEAR_ATTITUDE_CONTROL_H
-#define NONLINEAR_ATTITUDE_CONTROL_H
+#include "mavros_controllers/controller_manager.h"
 
-#include "geometric_controller/common.h"
-#include "geometric_controller/control.h"
+int main(int argc, char** argv) {
+  ros::init(argc, argv, "mavros_controller");
+  ros::NodeHandle nh("");
+  ros::NodeHandle nh_private("~");
 
-class NonlinearAttitudeControl : public Control {
- public:
-  NonlinearAttitudeControl(double attctrl_tau);
-  virtual ~NonlinearAttitudeControl();
-  void Update(Eigen::Vector4d &curr_att, const Eigen::Vector4d &ref_att, const Eigen::Vector3d &ref_acc,
-              const Eigen::Vector3d &ref_jerk) override;
+  MavrosControllers* Controller = new MavrosControllers(nh, nh_private);
 
- private:
-  double attctrl_tau_{1.0};
-};
+  dynamic_reconfigure::Server<mavros_controllers::GeometricControllerConfig> srv;
+  dynamic_reconfigure::Server<mavros_controllers::GeometricControllerConfig>::CallbackType f;
+  f = boost::bind(&MavrosControllers::dynamicReconfigureCallback, Controller, _1, _2);
+  srv.setCallback(f);
 
-#endif
+  ros::spin();
+  return 0;
+}

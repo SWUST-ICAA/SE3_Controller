@@ -63,15 +63,15 @@
 #include <std_msgs/Float32.h>
 #include <Eigen/Dense>
 
-#include <geometric_controller/FlatTarget.h>
+#include <mavros_controllers/FlatTarget.h>
 #include <dynamic_reconfigure/server.h>
-#include <geometric_controller/GeometricControllerConfig.h>
+#include <mavros_controllers/GeometricControllerConfig.h>
 #include <std_srvs/SetBool.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 #include <trajectory_msgs/MultiDOFJointTrajectoryPoint.h>
 
-#include "geometric_controller/common.h"
-#include "geometric_controller/control.h"
+#include "mavros_controllers/common.h"
+#include "mavros_controllers/control.h"
 
 #define ERROR_QUATERNION 1
 #define ERROR_GEOMETRIC 2
@@ -92,7 +92,7 @@ enum class MAV_STATE {
   MAV_STATE_FLIGHT_TERMINATION,
 };
 
-class geometricCtrl {
+class MavrosControllers {
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -148,7 +148,7 @@ class geometricCtrl {
   void pubSystemStatus();
   void appendPoseHistory();
   void targetCallback(const geometry_msgs::TwistStamped &msg);
-  void flattargetCallback(const geometric_controller::FlatTarget &msg);
+  void flattargetCallback(const mavros_controllers::FlatTarget &msg);
   void yawtargetCallback(const std_msgs::Float32 &msg);
   void multiDOFJointCallback(const trajectory_msgs::MultiDOFJointTrajectory &msg);
   void cmdloopCallback(const ros::TimerEvent &event);
@@ -181,9 +181,9 @@ class geometricCtrl {
   std::shared_ptr<Control> controller_;
 
  public:
-  void dynamicReconfigureCallback(geometric_controller::GeometricControllerConfig &config, uint32_t level);
-  geometricCtrl(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private);
-  virtual ~geometricCtrl();
+  void dynamicReconfigureCallback(mavros_controllers::GeometricControllerConfig &config, uint32_t level);
+  MavrosControllers(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private);
+  virtual ~MavrosControllers();
   void getStates(Eigen::Vector3d &pos, Eigen::Vector4d &att, Eigen::Vector3d &vel, Eigen::Vector3d &angvel) {
     pos = mavPos_;
     att = mavAtt_;

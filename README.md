@@ -1,8 +1,8 @@
-# Geometric Controller
+# MAVROS Controllers
 
 [![ROS Version](https://img.shields.io/badge/ROS-Noetic-blue.svg)](http://wiki.ros.org/noetic)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Version](https://img.shields.io/badge/version-v1.2.0-green.svg)](https://github.com/your-repo/geometric_controller)
+[![Version](https://img.shields.io/badge/version-v1.2.0-green.svg)](https://github.com/your-repo/mavros_controllers)
 
 SE(3) geometric controller for UAVs using differential flatness-based trajectory tracking.
 
@@ -23,12 +23,12 @@ cd .. && catkin_make
 ## Usage
 
 ```bash
-roslaunch geometric_controller geometric_controller.launch
+roslaunch mavros_controllers controller.launch
 ```
 
 ## Configuration
 
-Select controller type in `config/geometric_controller_config.yaml`:
+Select controller type in `config/mavros_controllers_config.yaml`:
 - `1`: Quaternion-based attitude control
 - `2`: SE(3) geometric control (default)
 - `3`: Jerk feedforward control
@@ -47,7 +47,7 @@ Select controller type in `config/geometric_controller_config.yaml`:
 ### Published
 - `/mavros/setpoint_raw/attitude` - Body rate and thrust commands to flight controller
 - `/reference/pose` - Current reference pose for visualization
-- `/geometric_controller/path` - Trajectory history for visualization
+- `/mavros_controllers/path` - Trajectory history for visualization
 - `/mavros/companion_process/status` - Controller status
 - `/mavros/setpoint_position/local` - Position setpoint for landing
 

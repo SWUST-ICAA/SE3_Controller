@@ -41,8 +41,8 @@
 #ifndef JERK_TRACKING_CONTROL_H
 #define JERK_TRACKING_CONTROL_H
 
-#include "geometric_controller/common.h"
-#include "geometric_controller/control.h"
+#include "mavros_controllers/common.h"
+#include "mavros_controllers/control.h"
 
 class JerkTrackingControl : public Control {
  public:

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>geometric_controller</name>
+  <name>mavros_controllers</name>
   <version>1.2.0</version>
   <description>SE(3) Geometric controller for UAVs using differential flatness-based trajectory tracking</description>
 
