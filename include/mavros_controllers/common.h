@@ -44,7 +44,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TwistStamped.h>
-#include <geometric_controller/FlatTarget.h>
+#include <mavros_controllers/FlatTarget.h>
 #include <Eigen/Dense>
 
 static Eigen::Matrix3d matrix_hat(const Eigen::Vector3d &v) {
