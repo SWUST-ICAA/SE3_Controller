@@ -23,12 +23,7 @@ cd .. && catkin_make
 ## Usage
 
 ```bash
-# Basic launch
 roslaunch geometric_controller geometric_controller.launch
-
-
-# Landing service
-rosservice call /land "data: true"
 ```
 
 ## Configuration
