@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>mavros_controllers</name>
-  <version>1.2.2</version>
+  <version>1.3.0</version>
   <description>controllers for UAVs using differential flatness-based trajectory tracking</description>
 
   <maintainer email="nanwan2004@126.com">Nanwan</maintainer>

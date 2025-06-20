@@ -2,7 +2,7 @@
 
 [![ROS Version](https://img.shields.io/badge/ROS-Noetic-blue.svg)](http://wiki.ros.org/noetic)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Version](https://img.shields.io/badge/version-v1.2.2-green.svg)](https://github.com/your-repo/mavros_controllers)
+[![Version](https://img.shields.io/badge/version-v1.3.0-green.svg)](https://github.com/your-repo/mavros_controllers)
 
 controllers for UAVs using differential flatness-based trajectory tracking.
 
